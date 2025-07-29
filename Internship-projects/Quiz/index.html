@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stunning Quiz App</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --background-color: #f0f2f5;
+            --text-color: #333;
+            --correct-color: #28a745;
+            --wrong-color: #dc3545;
+            --white: #ffffff;
+            --border-radius: 15px;
+            --box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-image: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        .quiz-container {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 90%;
+            max-width: 650px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .quiz-header {
+            padding: 2rem 2.5rem;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 5px;
+            background-color: var(--primary-color);
+            transition: width 0.4s ease-in-out;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        ul {
+            list-style-type: none;
+        }
+        ul li {
+            background-color: var(--background-color);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, border-color 0.3s;
+        }
+        ul li:hover {
+            background-color: #e0e2e5;
+            transform: translateY(-2px);
+        }
+        ul li.selected {
+            border-color: var(--primary-color);
+            background-color: #e8eaf6;
+        }
+        .answer {
+            display: none;
+        }
+        .answer + label {
+            display: block;
+            cursor: pointer;
+            width: 100%;
+        }
+        .quiz-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2.5rem;
+            background-color: var(--background-color);
+            border-top: 1px solid #ddd;
+        }
+        #feedback {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        #feedback.correct {
+            color: var(--correct-color);
+        }
+        #feedback.wrong {
+            color: var(--wrong-color);
+        }
+        #score {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        #submit {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1.5rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        #submit:hover:not(:disabled) {
+            background-color: var(--secondary-color);
+        }
+        #submit:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .quiz-container .final-message {
+            padding: 3rem;
+            text-align: center;
+        }
+        .quiz-container .reload-button {
+            margin-top: 1.5rem;
+            border-radius: 10px;
+            width: 50%;
+            align-self: center;
+            margin-bottom: 2rem;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .quiz-container .reload-button:hover {
+            background-color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container" id="quiz">
+        <div class="quiz-header">
+            <div id="progress-bar"></div>
+            <h2 id="question">Question is loading...</h2>
+            <ul>
+                <li>
+                    <input type="radio" name="answer" id="a" class="answer">
+                    <label for="a" id="a_text">Answer a</label>
+                </li>
+                <li>
+                    <input type="radio" name="answer" id="b" class="answer">
+                    <label for="b" id="b_text">Answer b</label>
+                </li>
+                <li>
+                    <input type="radio" name="answer" id="c" class="answer">
+                    <label for="c" id="c_text">Answer c</label>
+                </li>
+                <li>
+                    <input type="radio" name="answer" id="d" class="answer">
+                    <label for="d" id="d_text">Answer d</label>
+                </li>
+            </ul>
+        </div>
+
+        <div class="quiz-footer">
+            <div id="feedback"></div>
+            <div id="score">Score: 0</div>
+        </div>
+        
+        <button id="submit">Submit</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What does HTML stand for?",
+                a: "Hyper Text Markup Language",
+                b: "Hyperlink and Text Markup Language",
+                c: "Home Tool Markup Language",
+                d: "Hyperlinking Textual Modern Language",
+                correct: "a",
+            },
+            {
+                question: "What year was JavaScript launched?",
+                a: "1996",
+                b: "1995",
+                c: "1994",
+                d: "none of the above",
+                correct: "b",
+            },
+            {
+                question: "What does CSS stand for?",
+                a: "Central Style Sheets",
+                b: "Cascading Style Sheets",
+                c: "Cascading Simple Sheets",
+                d: "Cars SUVs Sailboats",
+                correct: "b",
+            },
+            {
+                question: "Which language runs in a web browser?",
+                a: "Java",
+                b: "C",
+                c: "Python",
+                d: "JavaScript",
+                correct: "d",
+            },
+        ];
+
+        const quiz = document.getElementById('quiz');
+        const answerEls = document.querySelectorAll('.answer');
+        const questionEl = document.getElementById('question');
+        const a_text = document.getElementById('a_text');
+        const b_text = document.getElementById('b_text');
+        const c_text = document.getElementById('c_text');
+        const d_text = document.getElementById('d_text');
+        const feedbackEl = document.getElementById('feedback');
+        const scoreEl = document.getElementById('score');
+        const submitBtn = document.getElementById('submit');
+        const progressBar = document.getElementById('progress-bar');
+        const answerListItems = document.querySelectorAll('.quiz-header ul li');
+
+        let currentQuiz = 0;
+        let score = 0;
+
+        loadQuiz();
+
+        function loadQuiz() {
+            deselectAnswers();
+            submitBtn.disabled = true;
+
+            const currentQuizData = quizData[currentQuiz];
+            questionEl.innerText = currentQuizData.question;
+            a_text.innerText = currentQuizData.a;
+            b_text.innerText = currentQuizData.b;
+            c_text.innerText = currentQuizData.c;
+            d_text.innerText = currentQuizData.d;
+
+            updateProgressBar();
+        }
+
+        function deselectAnswers() {
+            answerEls.forEach(answerEl => answerEl.checked = false);
+            answerListItems.forEach(item => item.classList.remove('selected'));
+            feedbackEl.innerText = '';
+            feedbackEl.className = '';
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuiz) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function getSelected() {
+            let answer;
+            answerEls.forEach(answerEl => {
+                if (answerEl.checked) {
+                    answer = answerEl.id;
+                }
+            });
+            return answer;
+        }
+
+        answerListItems.forEach(listItem => {
+            listItem.addEventListener('click', () => {
+                answerListItems.forEach(item => item.classList.remove('selected'));
+                listItem.classList.add('selected');
+                listItem.querySelector('.answer').checked = true;
+                submitBtn.disabled = false;
+            });
+        });
+
+        submitBtn.addEventListener('click', () => {
+            const answer = getSelected();
+            
+            if (answer) {
+                submitBtn.disabled = true;
+
+                if (answer === quizData[currentQuiz].correct) {
+                    score++;
+                    feedbackEl.innerText = "Correct!";
+                    feedbackEl.classList.add('correct');
+                } else {
+                    const correctAnswerLetter = quizData[currentQuiz].correct;
+                    const correctAnswerText = quizData[currentQuiz][correctAnswerLetter];
+                    feedbackEl.innerText = `Wrong! Correct was: "${correctAnswerText}"`;
+                    feedbackEl.classList.add('wrong');
+                }
+                scoreEl.innerText = `Score: ${score}`;
+
+                currentQuiz++;
+                
+                setTimeout(() => {
+                    if (currentQuiz < quizData.length) {
+                        loadQuiz();
+                    } else {
+                        progressBar.style.width = '100%';
+                        quiz.innerHTML = `
+                            <div class="final-message">
+                                <h2>You answered ${score}/${quizData.length} questions correctly.</h2>
+                                <button class="reload-button" onclick="location.reload()">Reload Quiz</button>
+                            </div>
+                        `;
+                    }
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
